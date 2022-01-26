@@ -5,6 +5,9 @@ import pandas as pd
 import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
 
+# executable_path = {'executable_path': ChromeDriverManager().install()}
+
+# browser = Browser('chrome', **executable_path, headless=True)
 
 def scrape_all():
     # Initiate headless driver for deployment
@@ -20,7 +23,7 @@ def scrape_all():
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
         "last_modified": dt.datetime.now(),
-        "hemispheres": scrape_hemispheres(browser)
+        "hemispheres": hemispheres(browser)
     }
 
     # Stop webdriver and return data
@@ -98,10 +101,6 @@ def mars_facts():
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
 
-if __name__ == "__main__":
-
-    # If running as script, print scraped data
-    print(scrape_all())
     
 def hemispheres(browser):
     # 1. Use browser to visit the URL 
@@ -114,22 +113,23 @@ def hemispheres(browser):
     # 3. Write code to retrieve the image urls and titles for each hemisphere.
     for x in range(4):
 #         hemis = {}
-        browser.find_by_tag('h3')[x].click()
+        browser.find_by_css('h3')[x].click()
 #         img_elem = browser.find_link_by_text('Sample').first
 #         img_url = img_elem['href']
 #         title = browser.find_by_css('h2.title').text
 #         hemis['img_url'] = img_url
 #         hemis['title'] = title
         hemisphere_data = scrape_hemispheres(browser.html)
-        hemisphere_image_urls.append(hemis)
+        hemisphere_image_urls.append(hemisphere_data)
         browser.back()
     return hemisphere_image_urls 
 
 def scrape_hemispheres(html_text):
-    hemi_soup = soup(html_text.html, "html.parser")
+    hemi_soup = soup(html_text, "html.parser")
+    print(html_text)
     try:
-        title_elem = hemi_soup.find("h3", class_="title").get_text()
-        img_elem = hemi_soup.find(text="Sample").get("href")
+        title_elem = hemi_soup.find("h2", class_="title").get_text()
+        img_elem = 'https://marshemispheres.com/' + hemi_soup.find("a" ,text = "Sample")["href"]
     except AttributeError:
         title_elem = None
         img_elem = None
@@ -138,3 +138,13 @@ def scrape_hemispheres(html_text):
         "img_url": img_elem
     }
     return hemispheres
+
+# print(hemispheres(browser))
+
+
+if __name__ == "__main__":
+    # If running as script, print scraped data
+    print(scrape_all())
+
+
+
